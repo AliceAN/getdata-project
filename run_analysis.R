@@ -97,9 +97,20 @@ createFullDataSet <- function(folder){
        
         # "5. From the data set in step 4, creates a second, independent tidy data set with 
         # the average of each variable for each activity and each subject."
+        #
+        # "group by" subject and activity, pass the resulting groups to summarise_each(), 
+        # 
+        averagedData <- tidyData %>% group_by(subject.id, activity.name) %>% summarise_each(funs(mean))
         
+        # then apply the mean function, then add the suffix .average to every numeric column  
+        cn <- setdiff(colnames(averagedData), c("subject.id","activity.name"  ) )
+        colnames(averagedData) <- unlist(lapply(cn, function(x){ paste0(x,".average") }))
+        # write the file that will be uploaded to coursera
+        message("Creating data file with averages data (aka Step 5)...")
+        write.table(x=averagedData, file = "averages.txt",row.names = FALSE, )
+
+
         # Returns the generated tidy data set
-        #list(tidyData=tidyData, w=wholeDataSet, l=activity_labels, f=features)
         tidyData
 }
 
