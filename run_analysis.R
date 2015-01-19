@@ -22,6 +22,14 @@ prepareWorkingDirectory <- function(){
         }
 }
 
+# "borrowed" from the documentation in ?tolower
+capwords <- function(s, strict = FALSE) {
+        cap <- function(s) paste(toupper(substring(s, 1, 1)),
+        {s <- substring(s, 2); if(strict) tolower(s) else s},
+        sep = "", collapse = " " )
+        sapply(strsplit(s, split = " "), cap, USE.NAMES = !is.null(names(s)))
+}
+
 # Utility function to abstract away the data extraction process for each set
 obtainDataSet <- function(folder,measurementType, featureNames){
         x <- read.table(file.path(folder,measurementType,paste0("X_",measurementType,".txt")), col.names = featureNames )
@@ -42,16 +50,20 @@ createFullDataSet <- function(folder){
         # See features_info.txt for more context
         # extracts the features, used to name the columns in the train and test sets
         # R replaces the punctuation marks (ie: "()", "-") with dots (".")
-        # so a variable originally named tBodyAcc-mean()-X becomes tBodyAcc.mean...Xrename
+        # so a variable originally named tBodyAcc-mean()-X becomes tBodyAcc.mean...X
         features <- read.table(file.path(folder,"features.txt"), row.names=1, col.names=c("id","name"))
         
-        # both data sets, joined together
+        # train and test data sets, joined together
         wholeDataSet <- rbind(obtainDataSet(folder,"test", features$name),
                               obtainDataSet(folder,"train", features$name))
 
         
         # "1. Merges the training and the test sets to create one data set."
-        activity_labels <- read.table(file.path(folder,"activity_labels.txt"), col.names=c("activity_id","activity_name"))
+        # Makes the label names "prettier" by removing underscores and capitalizing words
+        activity_labels <- read.table(
+                                file.path(folder,"activity_labels.txt"), 
+                                col.names=c("activity_id","activity_name")) %>%
+                                mutate(activity_name = str_replace_all(activity_name,"_"," ") %>% tolower %>% capwords)
         
         # "3. Uses descriptive activity names to name the activities in the data set"
         dataWithActivityLabels <- merge(x=wholeDataSet,y=activity_labels) 
@@ -83,17 +95,10 @@ createFullDataSet <- function(folder){
                       }
         ))
         colnames(tidyData) <- prettyColumnNames
+        # This yields something like the following:
         #[1] "subject.id"                                                "activity.name"                                            
         #[3] "time.signal.body.acceleration.magnitude.mean"              "time.signal.body.acceleration.magnitude.std.dev"          
-        #[5] "time.signal.gravity.acceleration.magnitude.mean"           "time.signal.gravity.acceleration.magnitude.std.dev"       
-        #[7] "time.signal.body.acceleration.jerk.magnitude.mean"         "time.signal.body.acceleration.jerk.magnitude.std.dev"     
-        #[9] "time.signal.body.gyroscope.magnitude.mean"                 "time.signal.body.gyroscope.magnitude.std.dev"             
-        #[11] "time.signal.body.gyroscope.jerk.magnitude.mean"            "time.signal.body.gyroscope.jerk.magnitude.std.dev"        
-        #[13] "frequency.signal.body.acceleration.magnitude.mean"         "frequency.signal.body.acceleration.magnitude.std.dev"     
-        #[15] "frequency.signal.body.acceleration.jerk.magnitude.mean"    "frequency.signal.body.acceleration.jerk.magnitude.std.dev"
-        #[17] "frequency.signal.body.gyroscope.magnitude.mean"            "frequency.signal.body.gyroscope.magnitude.std.dev"        
-        #[19] "frequency.signal.body.gyroscope.jerk.magnitude.mean"       "frequency.signal.body.gyroscope.jerk.magnitude.std.dev"  
-        
+     
        
         # "5. From the data set in step 4, creates a second, independent tidy data set with 
         # the average of each variable for each activity and each subject."
