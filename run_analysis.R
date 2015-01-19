@@ -2,8 +2,11 @@
 # Getting and Cleaning Data , Coursera getdata-010
 # Date: Jan 18th 2015
 
+library(reshape2)
 library(plyr)
 library(dplyr)
+library(tidyr)
+library(stringr)
 
 # Get the necessary data, if missing, and extracts the files into a "data" folder in the current working directory
 prepareWorkingDirectory <- function(){
@@ -21,24 +24,9 @@ prepareWorkingDirectory <- function(){
 
 # Utility function to abstract away the data extraction process for each set
 obtainDataSet <- function(folder,measurementType, featureNames){
-        x <- read.table(file.path(folder,measurementType,paste("X_",measurementType,".txt", sep = "")), col.names = featureNames )
-        y <- read.table(file.path(folder,measurementType,paste("y_",measurementType,".txt", sep = "")), col.names = "activity_id")
-        subjects <- read.table(file.path(folder,measurementType,paste("subject_",measurementType,".txt", sep="")), col.names = "subject_id")
-        
-        # These files are the ones that according to README.txt were used to
-        # calculate the values in y.txt
-        # commented out since they're not necessary for the tidy data set
-        # body_acc_x <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("body_acc_x_",measurementType,".txt",sep="")))
-        # body_acc_y <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("body_acc_y_",measurementType,".txt", sep="")))
-        # body_acc_z <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("body_acc_z_",measurementType,".txt",sep="")))
-        
-        # body_gyro_x <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("body_gyro_x_",measurementType,".txt",sep="")))
-        # body_gyro_y <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("body_gyro_y_",measurementType,".txt",sep="")))
-        # body_gyro_z <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("body_gyro_z_",measurementType,".txt",sep="")))
-        
-        # total_acc_x <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("total_acc_x_",measurementType,".txt",sep="")))
-        # total_acc_y <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("total_acc_y_",measurementType,".txt",sep="")))
-        # total_acc_z <- read.table(file.path(folder,measurementType,"Inertial Signals",paste("total_acc_z_",measurementType,".txt",sep="")))
+        x <- read.table(file.path(folder,measurementType,paste0("X_",measurementType,".txt")), col.names = featureNames )
+        y <- read.table(file.path(folder,measurementType,paste0("y_",measurementType,".txt")), col.names = "activity_id")
+        subjects <- read.table(file.path(folder,measurementType,paste0("subject_",measurementType,".txt")), col.names = "subject_id")
         
         # dplyr not useful here since there is no common "key" to merge by, row number assumed to match
         # in each file
@@ -47,14 +35,21 @@ obtainDataSet <- function(folder,measurementType, featureNames){
 
 # Given a folder it will find the necessary files to create the tidy data sets
 createFullDataSet <- function(folder){
+        # These steps are not "in order" but the result is the same in the end :)
+        
+        # "4. Appropriately labels the data set with descriptive variable names."
+        # PART 1 , see part 2 below
+        # See features_info.txt for more context
         # extracts the features, used to name the columns in the train and test sets
+        # R replaces the punctuation marks (ie: "()", "-") with dots (".")
+        # so a variable originally named tBodyAcc-mean()-X becomes tBodyAcc.mean...Xrename
         features <- read.table(file.path(folder,"features.txt"), row.names=1, col.names=c("id","name"))
         
         # both data sets, joined together
         wholeDataSet <- rbind(obtainDataSet(folder,"test", features$name),
                               obtainDataSet(folder,"train", features$name))
 
-        # These steps are not "in order" but the result is the same in the end :)
+        
         # "1. Merges the training and the test sets to create one data set."
         activity_labels <- read.table(file.path(folder,"activity_labels.txt"), col.names=c("activity_id","activity_name"))
         
@@ -62,26 +57,65 @@ createFullDataSet <- function(folder){
         dataWithActivityLabels <- merge(x=wholeDataSet,y=activity_labels) 
         
         # "2. Extracts only the measurements on the mean and standard deviation for each measurement. "
-        tidyData <- select(dataWithActivityLabels, subject_id, activity_name, matches("(mean|std)"))
-        
+        # as per the renaming performed by R in obtainDataSet, -mean() and -std() suffixes end up being named 
+        # .mean.. and .std.. , so we filter by them
+        tidyData <- select(dataWithActivityLabels, subject_id, activity_name, matches("(.mean..|.std..)$"))
+       
         # "4. Appropriately labels the data set with descriptive variable names."
+        # PART 2, prettyfy the names
+        # Will rely on Google's R Style Guide's identifier rules
+        # see https://google-styleguide.googlecode.com/svn/trunk/Rguide.xml
+        prettyColumnNames <- unlist(lapply(unlist(colnames(tidyData)), 
+                      function(x){ 
+                              x %>% tolower %>%
+                                      str_replace("subject_id", "subject.id") %>% 
+                                      str_replace("activity_name", "activity.name") %>% 
+                                      str_replace("^t", "time.signal.") %>% 
+                                      str_replace("^f","frequency.signal.") %>% 
+                                      str_replace("acc",".acceleration.") %>%
+                                      str_replace("gyro",".gyroscope.") %>% 
+                                      str_replace("mag",".magnitude") %>% 
+                                      str_replace(".std..",".std.dev") %>% 
+                                      str_replace(".mean..",".mean") %>%
+                                      str_replace("\\.\\.","\\.") %>%
+                                      str_replace("bodybody", "body")  # remove duplicate names in orig data
+                                      
+                      }
+        ))
+        colnames(tidyData) <- prettyColumnNames
+        #[1] "subject.id"                                                "activity.name"                                            
+        #[3] "time.signal.body.acceleration.magnitude.mean"              "time.signal.body.acceleration.magnitude.std.dev"          
+        #[5] "time.signal.gravity.acceleration.magnitude.mean"           "time.signal.gravity.acceleration.magnitude.std.dev"       
+        #[7] "time.signal.body.acceleration.jerk.magnitude.mean"         "time.signal.body.acceleration.jerk.magnitude.std.dev"     
+        #[9] "time.signal.body.gyroscope.magnitude.mean"                 "time.signal.body.gyroscope.magnitude.std.dev"             
+        #[11] "time.signal.body.gyroscope.jerk.magnitude.mean"            "time.signal.body.gyroscope.jerk.magnitude.std.dev"        
+        #[13] "frequency.signal.body.acceleration.magnitude.mean"         "frequency.signal.body.acceleration.magnitude.std.dev"     
+        #[15] "frequency.signal.body.acceleration.jerk.magnitude.mean"    "frequency.signal.body.acceleration.jerk.magnitude.std.dev"
+        #[17] "frequency.signal.body.gyroscope.magnitude.mean"            "frequency.signal.body.gyroscope.magnitude.std.dev"        
+        #[19] "frequency.signal.body.gyroscope.jerk.magnitude.mean"       "frequency.signal.body.gyroscope.jerk.magnitude.std.dev"  
         
-        # Returns the generated tidy data sets
-        list(tidyData=tidyData, w=wholeDataSet, l=activity_labels, f=features)
+       
+        # "5. From the data set in step 4, creates a second, independent tidy data set with 
+        # the average of each variable for each activity and each subject."
+        
+        # Returns the generated tidy data set
+        #list(tidyData=tidyData, w=wholeDataSet, l=activity_labels, f=features)
+        tidyData
 }
 
 # Run the project using the default base folder, assumes "data/UCI HAR Dataset"
 # When called will reload the script in case there were changes to it :)
 reload <- function(baseFolder = "data/UCI HAR Dataset"){
+        message("Re-sourcing .R file to ensure any changes are applied...")
         source("run_analysis.R")
+        message("Done.")
         prepareWorkingDirectory()
         
         # create a tidy data set in the parent environment
         message("Creating data structures...")
-        tidyDataSets <<- createFullDataSet(baseFolder)
+        tidyDataSet <<- createFullDataSet(baseFolder)
         
-        message("tidyDataSets is now available, displaying its summary")
-        summary(tidyDataSets)
+        message("tidyDataSet is now available, type summary(tidyDataSet) to see") 
 }
 
 # Upon first invokation of source("run_analysis.R) creates the 
