@@ -35,11 +35,13 @@ The script assumes the unzipped data resides in a folder called `UCI HAR Dataset
 
 ###Observations and variables in my tidy dataset
 
-Once the data has been tidied up, you can expect:
+Once the data has been tidied up, the following characteristics are true :
 
-|Number of observations in data set | Number of variables |
-|----------------|------------|
-| 10299   | 20 |
+| Tidy data set |Number of observations in data set | Number of variables |
+|---------------|----------------|------------|
+| `tidyDataSet` | 10299   | 20 |
+| `data_averages.txt` (when loaded using `read.table()`) | 180 | 20 |
+
 
 In order to generate the datasets *ONLY* measurements ending with the suffixes `-std()` and `-mean()` were used, other measurements that contained the word "Mean" or "meanFreq()" were ignored.
 ```R
@@ -106,7 +108,7 @@ git clone https://github.com/esmitperez/getdata-project.git
 ```R
 setwd("/PATH/TO/PROJECT")
 ```
-3. Source the project, this will **AUTOMATICALLY** download the data file and create a data folder, if the data is not already present with the name data.zip. It wil also create a file named `data_averages.txt` containing the tidy data set requested in step number 5 of the project
+3. Source the project, this will **AUTOMATICALLY** download the data file and create a data folder if necessary. It wil also create a file named `data_averages.txt` containing the tidy data set requested in step number 5 of the project
 ```R
 source("run_analysis.R")
 ```
@@ -118,6 +120,8 @@ Creating data structures...
 Creating data file with averages data (aka Step 5)...
 tidyDataSet is now available, type summary(tidyDataSet) to see
 ```
+
+_Note_: If the data has already been unzipped, it is expected to be in a folder named "UCI HAR Dataset" at the current working directory. 
 
 ## Viewing the data
 5. At this moment you may peruse the `tidyDataSet` data frame created from the data files in the .zip
@@ -154,3 +158,6 @@ You can then view its contents:
 [20] "frequency.signal.body.gyroscope.jerk.magnitude.std.dev.average"   
 ```
 
+## Miscelaneous
+
+If you wish to NOT have the script automatically perform the downloads set `hasBeenRunForFirstTime <- TRUE` before sourcing the file, then invoke `reload()` when ready to download them.
