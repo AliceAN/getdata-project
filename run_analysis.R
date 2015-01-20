@@ -43,7 +43,7 @@ obtainDataSet <- function(folder,measurementType, featureNames){
 
 # Given a folder it will find the necessary files to create the tidy data sets
 createFullDataSet <- function(folder){
-        # These steps are not "in order" but the result is the same in the end :)
+        # These goals are not "in order" but the result is the same in the end :)
         
         # "4. Appropriately labels the data set with descriptive variable names."
         # PART 1 , see part 2 below
@@ -107,14 +107,16 @@ createFullDataSet <- function(folder){
         # 
         averagedData <- tidyData %>% group_by(subject.id, activity.name) %>% summarise_each(funs(mean))
         
-        # then apply the mean function, then add the suffix .average to every numeric column  
-        cn <- setdiff(colnames(averagedData), c("subject.id","activity.name"  ) )
-        colnames(averagedData) <- unlist(lapply(cn, function(x){ paste0(x,".average") }))
+        # then apply the mean function, then add the suffix .average to every numeric column
+        # prepend the 2 columns we excluded from the renaming operation too.
+        cn <- setdiff(colnames(averagedData), c("subject.id","activity.name"  ) )        
+        colnames(averagedData) <- c("subject.id","activity.name", unlist(lapply(cn, function(x){ paste0(x,".average") })))
+        
         # write the file that will be uploaded to coursera
         message("Creating data file with averages data (aka Step 5)...")
         write.table(x=averagedData, file = "averages.txt",row.names = FALSE, )
-
-
+        
+        
         # Returns the generated tidy data set
         tidyData
 }
