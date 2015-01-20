@@ -8,17 +8,19 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 
-# Get the necessary data, if missing, and extracts the files into a "data" folder in the current working directory
+# Get the necessary data, if missing, and extracts the files into a "UCI HAR Dataset" folder in the current working directory
 prepareWorkingDirectory <- function(){
-        if ( !file.exists("data.zip")){
-                message("Downloading file...")
-                download.file(url="https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip", 
-                              destfile = "data.zip", 
-                              method = "curl",)    
-                message("Unzipping data.zip into 'data' folder...")
-                unzip(zipfile = "data.zip",exdir = "data")
-                
-                message("Done.")
+        zipFilename <- "getdata-projectfiles-UCI HAR Dataset.zip"
+        if (! file.exists("UCI HAR Dataset")){
+                if ( !file.exists(zipFilename)){
+                        message("Downloading file...")
+                        download.file(url="https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip", 
+                                      destfile = zipFilename, 
+                                      method = "curl",)    
+                        
+                }
+                message("Unzipping data .zip...")
+                unzip(zipfile = zipFilename)
         }
 }
 
@@ -114,16 +116,16 @@ createFullDataSet <- function(folder){
         
         # write the file that will be uploaded to coursera
         message("Creating data file with averages data (aka Step 5)...")
-        write.table(x=averagedData, file = "averages.txt",row.names = FALSE, )
+        write.table(x=averagedData, file = "data_averages.txt",row.names = FALSE, )
         
         
         # Returns the generated tidy data set
         tidyData
 }
 
-# Run the project using the default base folder, assumes "data/UCI HAR Dataset"
+# Run the project using the default base folder, assumes "UCI HAR Dataset"
 # When called will reload the script in case there were changes to it :)
-reload <- function(baseFolder = "data/UCI HAR Dataset"){
+reload <- function(baseFolder = "UCI HAR Dataset"){
         message("Re-sourcing .R file to ensure any changes are applied...")
         source("run_analysis.R")
         message("Done.")
