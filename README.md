@@ -100,19 +100,28 @@ For more context on this please see the discussion thread in the [Coursera Forum
 
 ## Running the script
 
-1. Clone the project from Github
+* Clone the project from Github
+
 ```bash
 git clone https://github.com/esmitperez/getdata-project.git
 ```
-2. In R or R Studio set your working directory to the folder where the project was clone into
+
+* In R or R Studio set your working directory to the folder where the project was cloned into
+
 ```R
 setwd("/PATH/TO/PROJECT")
 ```
-3. Source the project, this will **AUTOMATICALLY** download the data file and create a data folder if necessary. It wil also create a file named `data_averages.txt` containing the tidy data set requested in step number 5 of the project
+
+* Source the project, this will **AUTOMATICALLY** download the data file and create a data folder if necessary. It wil also create a file named `data_averages.txt` containing the tidy data set requested in step number 5 of the project
+
+ _Note_: If you wish to NOT have the script automatically perform the downloads set `hasBeenRunForFirstTime <- TRUE` before sourcing the file, then invoke `reload()` when ready to download them.
+
 ```R
 source("run_analysis.R")
 ```
-4. The output should read:
+
+* The output should read:
+
 ```R
 Re-sourcing .R file to ensure any changes are applied...
 Done.
@@ -121,10 +130,12 @@ Creating data file with averages data (aka Step 5)...
 tidyDataSet is now available, type summary(tidyDataSet) to see
 ```
 
-_Note_: If the data has already been unzipped, it is expected to be in a folder named "UCI HAR Dataset" at the current working directory. 
-
 ## Viewing the data
 5. At this moment you may peruse the `tidyDataSet` data frame created from the data files in the .zip
+```R
+> dim(tidyDataSet)
+[1] 10299    20
+```
 6. **OR** Load the `data_averages.txt` file to view the tidy data set created for Step 5.
 ```R
 r <- read.table("data_averages.txt", header = TRUE)
@@ -158,6 +169,3 @@ You can then view its contents:
 [20] "frequency.signal.body.gyroscope.jerk.magnitude.std.dev.average"   
 ```
 
-## Miscelaneous
-
-If you wish to NOT have the script automatically perform the downloads set `hasBeenRunForFirstTime <- TRUE` before sourcing the file, then invoke `reload()` when ready to download them.
