@@ -4,47 +4,6 @@ _Author_: Esmit Perez
 
 _Date_: Jan 18th 2015
 
-## About the script
-
-The column names in the generated DataFrames follow the identifier rules as suggested on [Google's R Style Guide's](https://google-styleguide.googlecode.com/svn/trunk/Rguide.xml#identifiers). 
-
-In order to generate the datasets *ONLY* measurements ending with the suffixes `-std()` and `-mean()` were used, other measurements that contained the word "Mean" or "meanFreq()" were ignored.
-```R
-# Sample of variables IGNORED to generate data sets
-gravityMean
-tBodyAccMean
-tBodyAccJerkMean
-tBodyGyroMean
-tBodyGyroJerkMean
-```
-
-The original variable names were expanded to explicitly and unambiguosly refer to the origin of the data:
-
-* prefixes `t` and `f` were expanded to `time.signal` and `frequency.signal`
-* body and gravity originated data have kept that designation
-* `mag` has been expanded to `magnitude` to avoid confusion with `magnestism` or other unrelated nouns
-* `-std()` suffix has been expanded to `std.dev` to more clearly convey standard deviation
-* `-mean()` suffix has been replaced by just `mean`
-
-With the above subsitutions in place, the variable names are now more descriptive, for example:
-
-* `tBodyAccMag-mean()` becomes `time.signal.body.acceleration.magnitude.mean`
-* `fBodyAccMag-std()` becomes `frequency.signal.body.acceleration.magnitude.std.dev`
-* etc, etc
-
-Activity names were made *friendly* by capitalizing only the first letter in each word and separating phrases by spaces instead of underscores, ie:
-
-| Original value       | New value            |
-|----------------------|---------------------:|
-| `WALKING`            | `Walking`            | 
-| `WALKING_UPSTAIRS`   | `Walking Upstairs`   |
-| `WALKING_DOWNSTAIRS` | `Walking Downstairs` |
-| `SITTING`            | `Sitting`            |
-| `STANDING`           | `Standing`           |
-| `LAYING`             | `Laying`             |
-
-_Note_: Please consult the [accompanying CodeBook](CodeBook.md) for a description of all variables.
-
 ## Running the script
 
 1. Clone the project from Github
@@ -69,10 +28,15 @@ tidyDataSet is now available, type summary(tidyDataSet) to see
 ```
 
 ## Viewing the data
-5. At this moment you may peruse the ```tidyDataSet``` data frame created from the data files in the .zip or 
-6. Load the ```averages.txt``` file to view the tidy data set created for Step 5.
+5. At this moment you may peruse the ```tidyDataSet``` data frame created from the data files in the .zip
+6. **OR** Load the ```averages.txt``` file to view the tidy data set created for Step 5.
 ```R
 r <- read.table("averages.txt", header = TRUE)
+```
+
+You can then view its contents:
+
+```R
 > nrow(r)
 [1] 180
 > colnames(r)
@@ -97,3 +61,58 @@ r <- read.table("averages.txt", header = TRUE)
 [19] "frequency.signal.body.gyroscope.jerk.magnitude.mean.average"      
 [20] "frequency.signal.body.gyroscope.jerk.magnitude.std.dev.average"   
 ```
+
+## About the script
+
+###Naming conventions
+
+The column names in the generated DataFrames follow the identifier rules as suggested on [Google's R Style Guide's](https://google-styleguide.googlecode.com/svn/trunk/Rguide.xml#identifiers). 
+
+The script achieves each goal outlined in the project description slightly out of order, this means goal (step) number 3 is performed before goal (step) number 2 because it makes it easier to achieve the usage of the labels and saves a lot of unneeded temporary variables or transformations.
+
+###Is the data tidy?
+
+Absolutely. It's in wide form, each row contains 18 variables for each unique subject/activiy observation.
+
+For more context on this please see the discussion thread in the [Coursera Forum for the Project](https://class.coursera.org/getdata-010/forum/thread?thread_id=241)
+
+###Data cleanup and merging
+
+In order to generate the datasets *ONLY* measurements ending with the suffixes `-std()` and `-mean()` were used, other measurements that contained the word "Mean" or "meanFreq()" were ignored.
+```R
+# Sample of variables IGNORED to generate data sets
+gravityMean
+tBodyAccMean
+tBodyAccJerkMean
+tBodyGyroMean
+tBodyGyroJerkMean
+```
+
+The original variable names were expanded to explicitly and unambiguosly refer to the origin of the data and to be compliant with the naming conventions above:
+
+* prefixes `t` and `f` were expanded to `time.signal` and `frequency.signal`
+* body and gravity originated data have kept that designation
+* `mag` has been expanded to `magnitude` to avoid confusion with `magnestism` or other unrelated nouns
+* `Jerk` was kept as a single word.
+* `-std()` suffix has been expanded to `std.dev` to more clearly convey standard deviation
+* `-mean()` suffix has been replaced by just `mean`
+
+With the above subsitutions in place, the variable names are now more descriptive, for example:
+
+* `tBodyAccMag-mean()` becomes `time.signal.body.acceleration.magnitude.mean`
+* `fBodyAccMag-std()` becomes `frequency.signal.body.acceleration.magnitude.std.dev`
+* etc, etc
+
+Activity names were made *friendly* by capitalizing only the first letter in each word and separating phrases by spaces instead of underscores, ie:
+
+| Original value       | New value            |
+|----------------------|---------------------:|
+| `WALKING`            | `Walking`            | 
+| `WALKING_UPSTAIRS`   | `Walking Upstairs`   |
+| `WALKING_DOWNSTAIRS` | `Walking Downstairs` |
+| `SITTING`            | `Sitting`            |
+| `STANDING`           | `Standing`           |
+| `LAYING`             | `Laying`             |
+
+**Note**: Please consult the [accompanying CodeBook](CodeBook.md) for a description of all variables.
+
